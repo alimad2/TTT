@@ -1,8 +1,7 @@
-from flask import Blueprint, request, abort, jsonify, url_for
+from flask import Blueprint, request, abort, jsonify, url_for, make_response
 from jsonschema import validate, ValidationError
 
 import service.service as service
-from controller.auth import get_username
 from rep.mongo import User
 from service.schema import Spend, Category, CREATE_ROLE, MOCK_ROLE
 
@@ -16,6 +15,31 @@ def get_all():
     @apiName GetAllSpends
     @apiGroup Spend
 
+    @apiSuccess {Object[]} spends List of user's spends.
+    @apiSuccessExample {json} Success-Response:
+    {
+    "spends": [
+        {
+            "category": "smth",
+            "date": "10Feb2020",
+            "id": 1,
+            "price": 500,
+            "url": "http://127.0.0.1:5000/spends/1"
+        },
+        {
+            "category": "smth",
+            "date": "10Feb2020",
+            "id": 2,
+            "price": 10,
+            "url": "http://127.0.0.1:5000/spends/2"
+        }
+    ]
+    }
+
+
+    @apiError UnauthenticatedError You should login to your account.
+    @apiError NotFoundError Either spend is not available or id is incorrect.
+
     """
 
     price = request.args.get('price')
@@ -25,7 +49,7 @@ def get_all():
     category = request.args.get('category')
     username = User.decode_token(request.headers.get('Authorization'))
     if not username:
-        return jsonify({'message': 'please log in again'})
+        return make_response(jsonify({'message': 'please log in again'})), 401
 
     spends = service.get_all(username, price, date, page, category, per_page)
     spendsJSON = []
@@ -39,7 +63,7 @@ def get_all():
             'url': url_for('test.get_spend', spend_id=spend.id, _external=True)
         }
         spendsJSON.append(temp)
-    return jsonify({'spends': spendsJSON})
+    return make_response(jsonify({'spends': spendsJSON})), 200
 
 
 @blue.route('/spends/<int:spend_id>', methods=['GET'])
@@ -49,11 +73,21 @@ def get_spend(spend_id):
     @apiName GetSpend
     @apiGroup Spend
 
+    @apiSuccess {Number} id The spend id.
+    @apiSuccess {date} date Date of spend.
+    @apiSuccess {Number} price Price of spend.
+    @apiSuccess {Category} category Category of spend.
+
+    @apiParam {Number} id The spend id.
+
+    @apiError UnauthenticatedError You should login to your account.
+    @apiError NotFoundError Either spend is not available or id is incorrect.
+
     """
 
     username = User.decode_token(request.headers.get('Authorization'))
     if not username:
-        return jsonify({'message': 'please log in again'})
+        return make_response(jsonify({'message': 'please log in again'})), 401
     spend = service.get_this_spend(username, spend_id)
     if spend == False:
         abort(404)
@@ -63,7 +97,7 @@ def get_spend(spend_id):
         'price': spend.price,
         'category': spend.category.name,
     }
-    return jsonify({'spend': spendjson})
+    return make_response(jsonify({'spend': spendjson})), 200
 
 
 @blue.route('/spends', methods=['POST'])
@@ -73,17 +107,34 @@ def new_spend():
     @apiName NewSpend
     @apiGroup Spend
 
+    @apiSuccess (201) {Number} id The spend id.
+    @apiSuccess (201) {date} date Date of spend.
+    @apiSuccess (201) {Number} price Price of spend.
+    @apiSuccess (201) {Category} category Category of spend.
+
+    @apiSuccessExample {json} Success-Response:
+    {
+    "spend": {
+        "category": "cat",
+        "date": "20Feb2020",
+        "id": 14,
+        "price": 1000
+    }
+    }
+
+    @apiError BadRequestError Either json request is not available or is not valid.
+    @apiError UnauthenticatedError You should login to your account.
     """
     username = User.decode_token(request.headers.get('Authorization'))
     if not username:
-        return jsonify({'message': 'please log in again'})
+        return make_response(jsonify({'message': 'please log in again'})), 401
     print("username is " + str(username))
     if not request.json:
         abort(400)
     try:
         validate(instance=request.json, schema=Spend.get_schema(role=CREATE_ROLE))
     except ValidationError:
-        return jsonify({'result': 'validation error'})
+        return make_response(jsonify({'result': 'validation error'})), 400
 
     spend = {
         'date': request.json['date'],
@@ -109,14 +160,25 @@ def update_spend(spend_id):
     @apiName UpdateSpend
     @apiGroup Spend
 
+    @apiSuccess (200) {Number} id The spend id.
+    @apiSuccess (200) {date} date Date of spend.
+    @apiSuccess (200) {Number} price Price of spend.
+    @apiSuccess (200) {Category} category Category of spend.
+
+    @apiParam {Number} id The spend id.
+
+    @apiError BadRequestError Either json request is not available or is not valid.
+    @apiError UnauthenticatedError You should login to your account.
+
+
     """
     try:
         validate(instance=request.json, schema=Spend.get_schema(role=MOCK_ROLE))
     except ValidationError:
-        return jsonify({'result': 'validation error'})
+        return make_response(jsonify({'result': 'validation error'})), 400
     username = User.decode_token(request.headers.get('Authorization'))
     if not username:
-        return jsonify({'message': 'please log in again'})
+        return make_response(jsonify({'message': 'please log in again'})), 401
     price = request.json.get('price', 'nothing')
     date = request.json.get('date', 'nothing')
     category = request.json.get('category', 'nothing')
@@ -140,10 +202,22 @@ def delete_spend(spend_id):
     @apiName DeleteSpend
     @apiGroup Spend
 
+    @apiSuccess (200) {Boolean} result True if spend has been successfully deleted.
+
+    @apiSuccessExample {json} Success-Response:
+    {
+    "result": true
+    }
+
+    @apiParam {Number} id The spend id.
+
+    @apiError BadRequestError Either json request is not available or is not valid.
+    @apiError UnauthenticatedError You should login to your account.
+
     """
     username = User.decode_token(request.headers.get('Authorization'))
     if not username:
-        return jsonify({'message': 'please log in again'})
+        return make_response(jsonify({'message': 'please log in again'})), 401
     ret = service.delete_spend(username, spend_id)
     if ret == False:
         abort(404)
@@ -157,10 +231,30 @@ def get_all_categories():
     @apiName GetAllCategories
     @apiGroup Category
 
+    @apiSuccess {Object[]} categories List of user's categories.
+
+    @apiSuccessExample {json} Success-Response:
+    {
+    "categories": [
+    {
+            "description": "this is description of food category",
+            "name": "food"
+        },
+        {
+            "description": "this is description of smth category",
+            "name": "smth"
+        }
+    ]
+    }
+
+
+    @apiError BadRequestError Either json request is not available or is not valid.
+    @apiError UnauthenticatedError You should login to your account.
+
     """
     username = User.decode_token(request.headers.get('Authorization'))
     if not username:
-        return jsonify({'message': 'please log in again'})
+        return make_response(jsonify({'message': 'please log in again'})), 401
     categories = service.get_all_categories(username)
     categoriesJSON = []
     for category in categories:
@@ -179,17 +273,33 @@ def create_new_category():
     @apiName NewCategory
     @apiGroup Category
 
+    @apiSuccess (201) {String} name Category name.
+    @apiSuccess (201) {String} description Description of category.
+    @apiSuccess (201) {String} message appropriate message.
+
+    @apiSuccessExample {json} Success-Response:
+    {
+    "category": {
+        "description": "this is description of cat category",
+        "message": "successfully created",
+        "name": "cat"
+    }
+    }
+
+    @apiError BadRequestError Either json request is not available or is not valid.
+    @apiError UnauthenticatedError You should login to your account.
+
     """
     if not request.json:
         abort(400)
     try:
         validate(instance=request.json, schema=Category.get_schema())
     except ValidationError:
-        return jsonify({'result': 'validation error'})
+        return make_response(jsonify({'result': 'validation error'})), 400
 
     username = User.decode_token(request.headers.get('Authorization'))
     if not username:
-        return jsonify({'message': 'please log in again'})
+        return make_response(jsonify({'message': 'please log in again'})), 401
     name = request.json.get('name')
     description = request.json.get('description', 'no description')
     category = {
@@ -199,21 +309,7 @@ def create_new_category():
     category = service.create_category(username, category)
     categoryJSON = {
         'name': category.name,
-        'description': category.description
+        'description': category.description,
+        'message': 'successfully created'
     }
     return jsonify({'category': categoryJSON})
-
-
-@blue.route("/testing")
-def test():
-    auth_header = request.headers.get('Authorization')
-    resp = User.decode_token(auth_header)
-    user = User.objects(username=resp)
-    response_object = {
-        'status': 'success',
-        'data': {
-            'username': get_username(auth_header),
-            'email': user[0].email,
-        }
-    }
-    return jsonify(response_object)
