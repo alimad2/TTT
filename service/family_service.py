@@ -1,10 +1,11 @@
-from service.service import find_user
-from rep.mongo import Family, User, Spend
-from flask_mail import Message
-from app import mail
-from mongoengine import Q
 import random
 import string
+
+from flask_mail import Message
+
+from app import mail
+from rep.mongo import Family, User, Spend
+from service.service import find_user
 
 
 def random_string_digits(string_length=6):
@@ -52,6 +53,8 @@ def invited_to_family(username, token):
 
 def send_invitation(username, invited_user):
     user = find_user(username)
+    if user.role_in_family == 0 or user.role_in_family == 1 or user.role_in_family == 2:
+        return False
     family = user.family
     family.pending.append(invited_user)
     family_token = user.family.token
@@ -65,7 +68,7 @@ def send_invitation(username, invited_user):
     return True
 
 
-def family_spends(username, page, per_page):
+def family_spends(username, page, per_page, price, date):
     if page is None:
         page = 1
     if per_page is None:
@@ -82,8 +85,28 @@ def family_spends(username, page, per_page):
     for user in User.objects(family=family):
         users.append(user)
     spends = []
-    for spend in Spend.objects().skip(offset).limit(items_per_page):
-        if spend.owner in users:
-            spends.append(spend)
 
-    return spends
+    if price is not None:
+        for spend in Spend.objects(price__gte=price):
+            if spend.owner in users:
+                spends.append(spend)
+    if date is not None:
+        for spend in Spend.objects(date=date):
+            if spend.owner in users:
+                spends.append(spend)
+    if price is None and date is None:
+        for spend in Spend.objects():
+            if spend.owner in users:
+                spends.append(spend)
+
+    return spends[offset:offset + items_per_page]
+
+
+def change_user_auth(username, username_to_be_changed, to):
+    user = find_user(username)
+    if user.role_in_family == 0 or user.role_in_family == 1 or user.role_in_family == 2:
+        return False
+    user_to_be_changed = find_user(username_to_be_changed)
+    user_to_be_changed.role_in_family = to
+    user_to_be_changed.save()
+    return True

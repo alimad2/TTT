@@ -45,13 +45,15 @@ def invite_member():
 def get_family_spends():
     page = request.args.get('page')
     per_page = request.args.get('pp')
+    price = request.args.get('price')
+    date = request.args.get('date')
     username = User.decode_token(request.headers.get('Authorization'))
     if not username:
         return make_response(jsonify({'message': 'please log in again'})), 401
 
-    spends = service.family_spends(username, page, per_page)
+    spends = service.family_spends(username, page, per_page, price, date)
     if not spends:
-        make_response(jsonify({'message': 'not authorized'})), 401
+        return make_response(jsonify({'message': 'not authorized'})), 401
 
     spendsJSON = []
     for spend in spends:
@@ -63,3 +65,17 @@ def get_family_spends():
         }
         spendsJSON.append(temp)
     return make_response(jsonify({'spends': spendsJSON})), 200
+
+
+@family.route('/family/change')
+def change_user_auth():
+    username = User.decode_token(request.headers.get('Authorization'))
+    user_to_be_changed = request.args.get('username')
+    to = request.args.get('to')
+
+    result = service.change_user_auth(username, user_to_be_changed, to)
+
+    if result:
+        return make_response(jsonify({'result': result})), 400
+    else:
+        return make_response(jsonify({'result': result})), 200
