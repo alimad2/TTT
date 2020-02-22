@@ -24,3 +24,16 @@ def create_new_family(username):
         print(e)
         return False
 
+
+def invited_to_family(username, token):
+    families = Family.objects(token=token)
+    if len(families) is not 0:
+        family = families[0]
+    else:
+        return False
+    user = find_user(username)
+    user.role_in_family = 1
+    user.save()
+    family.members.append(user)
+    family.save()
+    return True
