@@ -1,4 +1,7 @@
 from flask import Blueprint, request, jsonify, make_response
+from flask_mail import Message
+from app import mail
+
 from rep.mongo import User
 import service.family_service as service
 
@@ -21,3 +24,18 @@ def invited(token):
     if not family:
         make_response(jsonify({'result': False})), 404
     return make_response(jsonify({'result': True})), 200
+
+
+@family.route('/family/invite')
+def invite_member():
+    print('here')
+    username = User.decode_token(request.headers.get('Authorization'))
+    invited_user = request.args.get('user')
+    print(invited_user)
+    flag = service.send_invitation(username, invited_user)
+    if flag:
+        return make_response(jsonify({'result': True})), 200
+    else:
+        return make_response(jsonify({'result': False})), 400
+
+

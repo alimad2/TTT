@@ -15,12 +15,19 @@ class Role(Enum):
     OWNER = 4
 
 
+class Family(Document):
+    token = StringField(required=True, primary_key=True)
+    categories = ListField(StringField())
+    name = StringField()
+
+
 class User(Document):
     username = StringField(required=True, primary_key=True)
     password = StringField(required=True, min_length=8)
     email = StringField(required=True)
     name = StringField()
     role_in_family = IntField(min_value=0, max_value=4)
+    family = ReferenceField(Family, reverse_delete_rule=CASCADE)
 
     def encode_token(self, username):
         try:
@@ -57,12 +64,6 @@ class Category(Document):
     name = StringField(required=True, min_length=3, max_length=15)
     description = StringField(max_length=50, required=True)
     owner = ReferenceField('User', reverse_delete_rule=CASCADE, required=True)
-
-
-class Family(Document):
-    token = StringField(required=True, primary_key=True)
-    members = ListField(ReferenceField(User, reverse_delete_rule=CASCADE))
-    categories = ListField(StringField())
 
 
 class Spend(Document):
