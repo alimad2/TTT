@@ -8,9 +8,11 @@ app.secret_key = 'xxxyyyzzz'
 
 from controller.auth import auth
 from controller.main import blue
+from controller.family import family
 
 app.register_blueprint(blue)
 app.register_blueprint(auth)
+app.register_blueprint(family)
 
 
 @app.route('/')

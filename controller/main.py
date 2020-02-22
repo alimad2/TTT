@@ -78,6 +78,16 @@ def get_spend(spend_id):
     @apiSuccess {Number} price Price of spend.
     @apiSuccess {Category} category Category of spend.
 
+    @apiSuccessExample {json} Success-Response:
+    {
+    "spend": {
+        "category": "smth",
+        "date": "12Feb2020",
+        "id": 5,
+        "price": 220
+    }
+    }
+
     @apiParam {Number} id The spend id.
 
     @apiError UnauthenticatedError You should login to your account.
@@ -164,6 +174,16 @@ def update_spend(spend_id):
     @apiSuccess (200) {date} date Date of spend.
     @apiSuccess (200) {Number} price Price of spend.
     @apiSuccess (200) {Category} category Category of spend.
+
+    @apiSuccessExample {json} Success-Response:
+    {
+    "spend": {
+        "category": "car",
+        "date": "2Feb2020",
+        "id": 5,
+        "price": 1000
+    }
+    }
 
     @apiParam {Number} id The spend id.
 
