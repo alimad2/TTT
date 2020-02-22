@@ -138,7 +138,6 @@ def new_spend():
     username = User.decode_token(request.headers.get('Authorization'))
     if not username:
         return make_response(jsonify({'message': 'please log in again'})), 401
-    print("username is " + str(username))
     if not request.json:
         abort(400)
     try:

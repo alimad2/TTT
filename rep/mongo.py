@@ -18,6 +18,7 @@ class Role(Enum):
 class Family(Document):
     token = StringField(required=True, primary_key=True)
     categories = ListField(StringField())
+    pending = ListField(StringField())
     name = StringField()
 
 
