@@ -47,11 +47,12 @@ def get_family_spends():
     per_page = request.args.get('pp')
     price = request.args.get('price')
     date = request.args.get('date')
+    category = request.args.get('category')
     username = User.decode_token(request.headers.get('Authorization'))
     if not username:
         return make_response(jsonify({'message': 'please log in again'})), 401
 
-    spends = service.family_spends(username, page, per_page, price, date)
+    spends = service.family_spends(username, page, per_page, price, date, category)
     if not spends:
         return make_response(jsonify({'message': 'not authorized'})), 401
 

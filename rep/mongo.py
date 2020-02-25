@@ -62,8 +62,8 @@ class User(Document):
 
 class Category(Document):
     id = StringField(primary_key=True)
-    name = StringField(required=True, min_length=3, max_length=15)
-    description = StringField(max_length=50, required=True)
+    name = StringField(required=True, min_length=3, max_length=25)
+    description = StringField(max_length=100, required=True)
     owner = ReferenceField('User', reverse_delete_rule=CASCADE, required=True)
 
 

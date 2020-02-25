@@ -20,8 +20,8 @@ class User(jsl.Document):
 
 
 class Category(jsl.Document):
-    name = jsl.StringField(required=True, min_length=3, max_length=15)
-    description = jsl.StringField(max_length=50)
+    name = jsl.StringField(required=True, min_length=3, max_length=25)
+    description = jsl.StringField(max_length=100)
 
 
 class Spend(jsl.Document):

@@ -68,7 +68,7 @@ def send_invitation(username, invited_user):
     return True
 
 
-def family_spends(username, page, per_page, price, date):
+def family_spends(username, page, per_page, price, date, category):
     if page is None:
         page = 1
     if per_page is None:
@@ -86,15 +86,19 @@ def family_spends(username, page, per_page, price, date):
         users.append(user)
     spends = []
 
-    if price is not None:
+    if price is not None and date is None and category is None:
         for spend in Spend.objects(price__gte=price):
             if spend.owner in users:
                 spends.append(spend)
-    if date is not None:
+    if date is not None and price is None and category is None:
         for spend in Spend.objects(date=date):
             if spend.owner in users:
                 spends.append(spend)
-    if price is None and date is None:
+    if category is not None and price is None and date is None:
+        for spend in Spend.objects():
+            if spend.owner in users and category in spend.category.name:
+                spends.append(spend)
+    if price is None and date is None and category is None:
         for spend in Spend.objects():
             if spend.owner in users:
                 spends.append(spend)
