@@ -12,11 +12,17 @@ auth = Blueprint('auth', __name__)
 
 @auth.route('/register', methods=['GET'])
 def register_get():
+    username = us.decode_token(request.headers.get('Authorization'))
+    if username is not False:
+        return make_response(jsonify({'message': 'you are already logged in'})), 400
     return jsonify({'message': 'show registration page'})
 
 
 @auth.route('/register', methods=['POST'])
 def register_post():
+    username = us.decode_token(request.headers.get('Authorization'))
+    if username is not False:
+        return make_response(jsonify({'message': 'you are already logged in'})), 400
     try:
         validate(instance=request.json, schema=User.get_schema(role=REGISTER_ROLE))
     except ValidationError as e:
@@ -41,11 +47,17 @@ def register_post():
 
 @auth.route('/login', methods=['GET'])
 def login_get():
+    username = us.decode_token(request.headers.get('Authorization'))
+    if username is not False:
+        return make_response(jsonify({'message': 'you are already logged in'})), 400
     return jsonify({'login page': 'show login page'})
 
 
 @auth.route('/login', methods=['POST'])
 def login_post():
+    username = us.decode_token(request.headers.get('Authorization'))
+    if username is not False:
+        return make_response(jsonify({'message': 'you are already logged in'})), 400
     try:
         validate(instance=request.json, schema=User.get_schema(role=LOGIN_ROLE))
     except ValidationError as e:

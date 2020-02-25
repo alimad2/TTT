@@ -55,9 +55,9 @@ class User(Document):
             else:
                 return False
         except jwt.ExpiredSignatureError:
-            return 'Signature expired. Please log in again.'
+            return False
         except jwt.InvalidTokenError:
-            return 'Invalid token. Please log in again.'
+            return False
 
 
 class Category(Document):

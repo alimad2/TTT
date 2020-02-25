@@ -38,7 +38,6 @@ def get_all():
 
 
     @apiError UnauthenticatedError You should login to your account.
-    @apiError NotFoundError Either spend is not available or id is incorrect.
 
     """
 

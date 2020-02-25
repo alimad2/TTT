@@ -8,6 +8,21 @@ family = Blueprint('family', __name__)
 
 @family.route('/family', methods=['POST'])
 def create_family():
+    """
+    @api {post} /family Creates new family
+    @apiName NewFamily
+    @apiGroup Family
+
+    @apiSuccess (201) {Boolean} result the result of the operation.
+
+    @apiSuccessExample {json} Success-Response:
+    {
+    "result": true
+    }
+
+    @apiError UnauthenticatedError You should login to your account.
+
+    """
     username = User.decode_token(request.headers.get('Authorization'))
     if not username:
         return make_response(jsonify({'message': 'please log in again'})), 401
@@ -19,6 +34,21 @@ def create_family():
 
 @family.route('/family/invited/<string:token>')
 def invited(token):
+    """
+    @api {get} /family:token Accepts the invitation request
+    @apiName AcceptInvitation
+    @apiGroup Family
+
+    @apiSuccess (200) {Boolean} result The result of the operation.
+
+    @apiSuccessExample {json} Success-Response:
+    {
+    "result": true
+    }
+
+    @apiError UnauthenticatedError You should login to your account.
+
+    """
     username = User.decode_token(request.headers.get('Authorization'))
     if not username:
         return make_response(jsonify({'message': 'please log in again'})), 401
@@ -30,6 +60,23 @@ def invited(token):
 
 @family.route('/family/invite')
 def invite_member():
+    """
+    @api {get} /family/invite Invites the user
+    @apiName InviteUser
+    @apiGroup Family
+
+    @apiSuccess (200) {Boolean} result The result of operation.
+
+    @apiSuccessExample {json} Success-Response:
+    {
+    "result": true
+    }
+
+    @apiParam {String} user Username of user that admin wants to invite to the family.
+
+    @apiError UnauthenticatedError You should login to your account.
+
+    """
     username = User.decode_token(request.headers.get('Authorization'))
     if not username:
         return make_response(jsonify({'message': 'please log in again'})), 401
@@ -43,6 +90,34 @@ def invite_member():
 
 @family.route('/family/spends', methods=['GET'])
 def get_family_spends():
+    """
+        @api {get} /family/spends Request All Spends Information for the family.
+        @apiName GetAllFamilySpends
+        @apiGroup Family
+
+        @apiSuccess {Object[]} spends List of user's spends.
+        @apiSuccessExample {json} Success-Response:
+        {
+        "spends": [
+        {
+            "category": "car something",
+            "date": "25Feb2020",
+            "price": 1000,
+            "user": "alimad2"
+        },
+        {
+            "category": "car something",
+            "date": "23Feb2020",
+            "price": 4352,
+            "user": "alimad2"
+        }
+        ]
+        }
+
+
+        @apiError UnauthenticatedError You should login to your account.
+
+        """
     page = request.args.get('page')
     per_page = request.args.get('pp')
     price = request.args.get('price')
@@ -70,6 +145,24 @@ def get_family_spends():
 
 @family.route('/family/change')
 def change_user_auth():
+    """
+    @api {get} /family/change Owner of family can change members authority.
+    @apiName ChangeAuth
+    @apiGroup Family
+
+    @apiSuccess (200) {Boolean} result The result of the operation.
+
+    @apiSuccessExample {json} Success-Response:
+    {
+    "result": true
+    }
+
+    @apiParam {String} username Username of the user that owner wants to change his authority.
+    @apiParam {Number} to 1=MEMBER, 2=READ, 3=ADMIN
+
+
+
+    """
     username = User.decode_token(request.headers.get('Authorization'))
     user_to_be_changed = request.args.get('username')
     to = request.args.get('to')
